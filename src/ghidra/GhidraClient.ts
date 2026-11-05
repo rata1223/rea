@@ -245,11 +245,18 @@ export class GhidraClient {
       void Promise.resolve()
         .then(() => {
           if (!active || signal?.aborted) return;
+          const elapsedSec = Math.floor((performance.now() - startedAt) / 1000);
+          const stage =
+            elapsedSec < 30
+              ? "import and JVM startup"
+              : elapsedSec < 120
+                ? "auto-analysis and disassembly indexing"
+                : "decompilation and bridge readiness";
           return progress.report({
             phase: "ghidra_startup",
             completed: 0,
             total: null,
-            message: `Waiting for Ghidra startup (${String(Math.floor((performance.now() - startedAt) / 1000))}s elapsed); import, auto-analysis and bridge readiness may still be pending`,
+            message: `Waiting for Ghidra startup (${String(elapsedSec)}s elapsed, stage: ${stage}); import, auto-analysis and bridge readiness may still be pending`,
           });
         })
         // Notification failure does not release the owned startup process.
