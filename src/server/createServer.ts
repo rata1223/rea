@@ -30,6 +30,7 @@ import { registerFridaTools } from "./registerFridaTools.js";
 import { createBinaryLayoutService } from "../composition/binaryDiagnostics.js";
 import type { BinaryLayoutService } from "../application/binaryDiagnostics/BinaryLayoutService.js";
 import { EvidenceMcpServer } from "./EvidenceMcpServer.js";
+import { StartupSweeper } from "../process/StartupSweeper.js";
 import {
   createToolResultDelivery,
   type ToolResultDelivery,
@@ -305,6 +306,12 @@ export const createServer = (
   };
   const startedAt = new Date().toISOString();
   const logger = options.logger ?? silentLogger;
+  void StartupSweeper.sweepOrphanedRuntimeRoots().catch((err: unknown) => {
+    logger.warn(
+      { error: err instanceof Error ? err.message : String(err) },
+      "Startup sweeper failed to clean orphaned runtime roots",
+    );
+  });
   const server = createMcpServer(
     session,
     delivery,
